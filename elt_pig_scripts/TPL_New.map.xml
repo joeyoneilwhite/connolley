@@ -1,0 +1,480 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--======  Map XML ======-->
+<!-- <!DOCTYPE Map SYSTEM "DJMap.dtd"> -->
+<Map schemaVersion = "1.2" version = "1.43" creator = "john.dibella" datecreated = "2010-11-19T09:23:55Z" author = "john.dibella" datemodified = "2015-06-05T17:57:26Z">
+  <MapEvents>
+    <Event name = "BeforeTransformation">
+      <Action name = "Execute">
+        <Parameter position = "0" name = "expression"><![CDATA[N=Sources(0).Filename
+Global SFileName
+P=Instr(0,N,"\")
+While P<>0
+N=Mid(N,P+1)
+P=Instr(0,N,"\")
+Wend
+SFileName = N
+
+'2009-11-25 - SJD - New code for load logging
+Global RecordsRead
+Global RecordsWritten
+Global ErrorCount
+
+Global TimeStart 
+TimeStart = Now()
+
+Global vRecordsInFile
+vRecordsInFile = 0]]></Parameter>
+      </Action>
+    </Event>
+    <Event name = "AfterTransformation">
+      <Action name = "QueryStatistic">
+        <Parameter position = "0" name = "statistic name"><![CDATA[Reads]]></Parameter>
+        <Parameter position = "1" name = "result variable"><![CDATA[RecordsRead]]></Parameter>
+      </Action>
+      <Action name = "QueryStatistic">
+        <Parameter position = "0" name = "statistic name"><![CDATA[Writes]]></Parameter>
+        <Parameter position = "1" name = "result variable"><![CDATA[RecordsWritten]]></Parameter>
+      </Action>
+      <Action name = "QueryStatistic">
+        <Parameter position = "0" name = "statistic name"><![CDATA[Errors]]></Parameter>
+        <Parameter position = "1" name = "result variable"><![CDATA[ErrorCount]]></Parameter>
+      </Action>
+      <Action name = "Execute">
+        <Parameter position = "0" name = "expression"><![CDATA[Proc_SFileName = SFileName
+Proc_RecLength = 0
+Proc_RecordsRead = RecordsRead
+Proc_SQLServer = Targets(0).Server
+Proc_SQLDatabase = Targets(0).Database
+Proc_SQLTable = Targets(0).Table
+Proc_SQLTable = StrReplace("dbo.","",Proc_SQLTable)
+Proc_SourceType = Sources(0).TypeName
+Proc_SourceType = StrReplace("'","''",Proc_SourceType)
+ 
+
+'Get Record Length 
+For i = 1 To Sources(0).Records(0).FieldCount
+   Proc_RecLength = Proc_RecLength + Sources(0).Records(0).Fields(i).length
+Next
+
+
+Dim objFile AS Object
+Dim objFSO AS Object
+Set objFSO = CreateObject("Scripting.FileSystemObject")
+Set objFile = objFSO.GetFile(Sources(0).FileName)
+FileLength = objFile.Size
+ 
+'Get records expected from the number of records specified in the last record of the file
+RecordsExpected = Val(vRecordsInFile)
+
+'Public imp As DJImport
+'Set imp = New DJImport "ASCII (Delimited)"
+'
+'Public count
+'count = 1
+'
+'RecSeprtr = "CR-LF"
+'
+'imp.ConnectString = "File=" & Sources(0).FileName &  ";CodePage=ANSI;RecordSeparator=" & RecSeprtr & ";RecordFieldCount=0;FieldSeparator=" & chr(9) & ",;FieldStartDelimiter='" & chr(34) & "';FieldEndDelimiter='" & chr(34) & "';Header=False;AlternateFieldSeparator=None;StartOffset=0;AutomaticStyling=False;StyleSampleSize=5000;StripLeadingBlanks=False;StripTrailingBlanks=False;Field1IsRecTypeId=False"
+'
+'ON ERROR Resume NEXT 
+'
+'While (Not(Err == ERR_EOF)) 
+'   count = count + 1
+'  imp.RecordNumber = count 
+'Wend
+'
+'Set imp = Nothing 
+'
+'Count = Count - 1
+'
+'RecordsExpected = Count
+
+
+MapName = "TPL_New.map.xml"  
+DataGroup = "TPL"
+
+Dim Ins AS DJImport
+Set Ins = new DJImport("SQL Server 2005") 
+
+'replace server and database in the next statement with appropriate server and client container database 
+Ins.connectstring="server=dc-Alta;database=AmeriHealth" 
+
+X = "BEGIN INSERT INTO TrackerLoadLog VALUES ('" & _
+             DataGroup & "','" & Sources(0).FileName & "','" & MapName & "','" & Proc_SQLTable & "','" & Proc_SFileName & "'," & Proc_RecLength & "," & RecordsExpected & "," & Proc_RecordsRead & "," & RecordsWritten & "," & FileLength & ",'" & TimeStart & "','" & Now() & "'," & ErrorCount & ",'" & Proc_SQLServer & "','" & Proc_SQLDatabase & "','" & Proc_SourceType & "'); END; SELECT 1 AS X"
+Ins.sqlstatement = X
+
+Set Ins = Nothing
+Set objFSO = Nothing
+Set objFile = Nothing
+]]></Parameter>
+      </Action>
+    </Event>
+  </MapEvents>
+  <MapSources>
+    <MapSource name = "MapSource1">
+      <MapSchema>
+        <Schema connectorname = "ASCII (Delimited)" designedfor = "Source">
+          <RecordLayouts>
+            <RecordLayout name = "R1" length = "415" status = "0">
+              <Origin origintype = "0"/>
+              <Fields>
+                <Field name = "MemberID">
+                  <Datatype datatype = "0" dataalias = "Text" datalength = "9" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no"/>
+                </Field>
+                <Field name = "GroupID">
+                  <Datatype datatype = "0" dataalias = "Text" datalength = "8" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no"/>
+                </Field>
+                <Field name = "CarrierID">
+                  <Datatype datatype = "0" dataalias = "Text" datalength = "9" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no"/>
+                </Field>
+                <Field name = "CarrierName">
+                  <Datatype datatype = "0" dataalias = "Text" datalength = "50" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no"/>
+                </Field>
+                <Field name = "CarrierAddr1">
+                  <Datatype datatype = "0" dataalias = "Text" datalength = "40" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no"/>
+                </Field>
+                <Field name = "CarrierAddr2">
+                  <Datatype datatype = "0" dataalias = "Text" datalength = "40" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no"/>
+                </Field>
+                <Field name = "CarrierAddr3">
+                  <Datatype datatype = "0" dataalias = "Text" datalength = "40" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no"/>
+                </Field>
+                <Field name = "CarrierCity">
+                  <Datatype datatype = "0" dataalias = "Text" datalength = "19" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no"/>
+                </Field>
+                <Field name = "CarrierState">
+                  <Datatype datatype = "0" dataalias = "Text" datalength = "2" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no"/>
+                </Field>
+                <Field name = "CarrierZIP">
+                  <Datatype datatype = "0" dataalias = "Text" datalength = "11" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no"/>
+                </Field>
+                <Field name = "CoverageID">
+                  <Datatype datatype = "0" dataalias = "Text" datalength = "4" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no"/>
+                </Field>
+                <Field name = "CoverageDesc">
+                  <Datatype datatype = "0" dataalias = "Text" datalength = "80" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no"/>
+                </Field>
+                <Field name = "PolicyNbr">
+                  <Datatype datatype = "0" dataalias = "Text" datalength = "25" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no"/>
+                </Field>
+                <Field name = "PolicyEffDate">
+                  <Datatype datatype = "0" dataalias = "Text" datalength = "26" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no"/>
+                </Field>
+                <Field name = "PolicyTermDate">
+                  <Datatype datatype = "0" dataalias = "Text" datalength = "26" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no"/>
+                </Field>
+                <Field name = "PolicyUpdateDate">
+                  <Datatype datatype = "0" dataalias = "Text" datalength = "26" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no"/>
+                </Field>
+              </Fields>
+              <RecordLayoutOptions>
+                <Option name = "uniquenameprefix" value = "FIELD1"/>
+              </RecordLayoutOptions>
+            </RecordLayout>
+          </RecordLayouts>
+        </Schema>
+      </MapSchema>
+      <RecordLayoutEvents recordlayoutname = "R1">
+        <Event name = "AfterEveryRecord">
+          <Action name = "ClearMapPut Record">
+            <Parameter position = "0" name = "target name"><![CDATA[Target]]></Parameter>
+            <Parameter position = "1" name = "record layout"><![CDATA[R1]]></Parameter>
+          </Action>
+        </Event>
+      </RecordLayoutEvents>
+    </MapSource>
+  </MapSources>
+  <MapTargets>
+    <MapTarget name = "MapTarget1">
+      <MapSchema>
+        <Schema connectorname = "SQL Server 2005 Mass Insert" designedfor = "Target">
+          <RecordLayouts>
+            <RecordLayout name = "R1" length = "427" status = "0">
+              <Origin origintype = "0"/>
+              <Fields>
+                <Field name = "MemberID">
+                  <Datatype datatype = "151" dataalias = "varchar" datalength = "9" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no" datanulls = "yes" datavariablelength = "no"/>
+                </Field>
+                <Field name = "GroupID">
+                  <Datatype datatype = "151" dataalias = "varchar" datalength = "8" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no" datanulls = "yes" datavariablelength = "no"/>
+                </Field>
+                <Field name = "CarrierID">
+                  <Datatype datatype = "151" dataalias = "varchar" datalength = "9" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no" datanulls = "yes" datavariablelength = "no"/>
+                </Field>
+                <Field name = "CarrierName">
+                  <Datatype datatype = "151" dataalias = "varchar" datalength = "50" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no" datanulls = "yes" datavariablelength = "no"/>
+                </Field>
+                <Field name = "CarrierAddr1">
+                  <Datatype datatype = "151" dataalias = "varchar" datalength = "40" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no" datanulls = "yes" datavariablelength = "no"/>
+                </Field>
+                <Field name = "CarrierAddr2">
+                  <Datatype datatype = "151" dataalias = "varchar" datalength = "40" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no" datanulls = "yes" datavariablelength = "no"/>
+                </Field>
+                <Field name = "CarrierAddr3">
+                  <Datatype datatype = "151" dataalias = "varchar" datalength = "40" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no" datanulls = "yes" datavariablelength = "no"/>
+                </Field>
+                <Field name = "CarrierCity">
+                  <Datatype datatype = "151" dataalias = "varchar" datalength = "19" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no" datanulls = "yes" datavariablelength = "no"/>
+                </Field>
+                <Field name = "CarrierState">
+                  <Datatype datatype = "0" dataalias = "char" datalength = "2" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no" datanulls = "yes" datapadchar = " "/>
+                </Field>
+                <Field name = "CarrierZIP">
+                  <Datatype datatype = "151" dataalias = "varchar" datalength = "11" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no" datanulls = "yes" datavariablelength = "no"/>
+                </Field>
+                <Field name = "CoverageID">
+                  <Datatype datatype = "0" dataalias = "char" datalength = "4" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no" datanulls = "yes" datapadchar = " "/>
+                </Field>
+                <Field name = "CoverageDesc">
+                  <Datatype datatype = "151" dataalias = "varchar" datalength = "80" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no" datanulls = "yes" datavariablelength = "no"/>
+                </Field>
+                <Field name = "PolicyNbr">
+                  <Datatype datatype = "151" dataalias = "varchar" datalength = "25" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no" datanulls = "yes" datavariablelength = "no"/>
+                </Field>
+                <Field name = "PolicyEffDate">
+                  <Datatype datatype = "8" dataalias = "smalldatetime" datalength = "8" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no" datanulls = "yes" dataprecision = "12"/>
+                  <FieldOptions>
+                    <Option name = "editpicture" value = "yyyy-mm-dd H24:MM:SS"/>
+                  </FieldOptions>
+                </Field>
+                <Field name = "PolicyTermDate">
+                  <Datatype datatype = "8" dataalias = "smalldatetime" datalength = "8" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no" datanulls = "yes" dataprecision = "12"/>
+                  <FieldOptions>
+                    <Option name = "editpicture" value = "yyyy-mm-dd H24:MM:SS"/>
+                  </FieldOptions>
+                </Field>
+                <Field name = "PolicyUpdateDate">
+                  <Datatype datatype = "8" dataalias = "smalldatetime" datalength = "8" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no" datanulls = "yes" dataprecision = "12"/>
+                  <FieldOptions>
+                    <Option name = "editpicture" value = "yyyy-mm-dd H24:MM:SS"/>
+                  </FieldOptions>
+                </Field>
+                <Field name = "LoadDate">
+                  <Datatype datatype = "8" dataalias = "smalldatetime" datalength = "8" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no" datanulls = "yes" dataprecision = "12"/>
+                  <FieldOptions>
+                    <Option name = "editpicture" value = "yyyy-mm-dd H24:MM:SS"/>
+                  </FieldOptions>
+                </Field>
+                <Field name = "SFileName">
+                  <Datatype datatype = "151" dataalias = "varchar" datalength = "50" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no" datanulls = "yes" datavariablelength = "no"/>
+                </Field>
+                <Field name = "StatsStratsPlaceholder">
+                  <Datatype datatype = "2" dataalias = "int" datalength = "4" datamsbfirst = "no" dataidentity = "no" dataautoinc = "no" datacurrency = "no" datarowversion = "no" datanulls = "yes" dataprecision = "9" datasigned = "yes"/>
+                </Field>
+                <Field name = "AutoID">
+                  <Datatype datatype = "2" dataalias = "int identity" datalength = "4" datamsbfirst = "no" dataidentity = "yes" dataautoinc = "no" datacurrency = "no" datarowversion = "no" dataprecision = "9" datasigned = "yes"/>
+                </Field>
+              </Fields>
+              <RecordLayoutOptions>
+                <Option name = "uniquenameprefix" value = "FIELD1"/>
+              </RecordLayoutOptions>
+            </RecordLayout>
+          </RecordLayouts>
+        </Schema>
+        <MapExpressions>
+          <MapExpression language = "DJScript" recordlayoutname = "R1" fieldname = "MemberID"><![CDATA[Token=Trim(Records("R1").Fields("MemberID"))
+If Len(token)=0 Then
+chr(032)
+Else
+	If Asc(Token) = 0 Then
+		Chr(032)
+	Else
+		token
+	End If
+end if]]></MapExpression>
+          <MapExpression language = "DJScript" recordlayoutname = "R1" fieldname = "GroupID"><![CDATA[Token=Trim(Records("R1").Fields("GroupID"))
+If Len(token)=0 Then
+chr(032)
+Else
+	If Asc(Token) = 0 Then
+		Chr(032)
+	Else
+		token
+	End If
+end if]]></MapExpression>
+          <MapExpression language = "DJScript" recordlayoutname = "R1" fieldname = "CarrierID"><![CDATA[Token=Trim(Records("R1").Fields("CarrierID"))
+If Len(token)=0 Then
+chr(032)
+Else
+	If Asc(Token) = 0 Then
+		Chr(032)
+	Else
+		token
+	End If
+end if]]></MapExpression>
+          <MapExpression language = "DJScript" recordlayoutname = "R1" fieldname = "CarrierName"><![CDATA[Token=Trim(Records("R1").Fields("CarrierName"))
+If Len(token)=0 Then
+chr(032)
+Else
+	If Asc(Token) = 0 Then
+		Chr(032)
+	Else
+		token
+	End If
+end if]]></MapExpression>
+          <MapExpression language = "DJScript" recordlayoutname = "R1" fieldname = "CarrierAddr1"><![CDATA[Token=Trim(Records("R1").Fields("CarrierAddr1"))
+If Len(token)=0 Then
+chr(032)
+Else
+	If Asc(Token) = 0 Then
+		Chr(032)
+	Else
+		token
+	End If
+end if]]></MapExpression>
+          <MapExpression language = "DJScript" recordlayoutname = "R1" fieldname = "CarrierAddr2"><![CDATA[Token=Trim(Records("R1").Fields("CarrierAddr2"))
+If Len(token)=0 Then
+chr(032)
+Else
+	If Asc(Token) = 0 Then
+		Chr(032)
+	Else
+		token
+	End If
+end if]]></MapExpression>
+          <MapExpression language = "DJScript" recordlayoutname = "R1" fieldname = "CarrierAddr3"><![CDATA[Token=Trim(Records("R1").Fields("CarrierAddr3"))
+If Len(token)=0 Then
+chr(032)
+Else
+	If Asc(Token) = 0 Then
+		Chr(032)
+	Else
+		token
+	End If
+end if]]></MapExpression>
+          <MapExpression language = "DJScript" recordlayoutname = "R1" fieldname = "CarrierCity"><![CDATA[Token=Trim(Records("R1").Fields("CarrierCity"))
+If Len(token)=0 Then
+chr(032)
+Else
+	If Asc(Token) = 0 Then
+		Chr(032)
+	Else
+		token
+	End If
+end if]]></MapExpression>
+          <MapExpression language = "DJScript" recordlayoutname = "R1" fieldname = "CarrierState"><![CDATA[Token=Trim(Records("R1").Fields("CarrierState"))
+If Len(token)=0 Then
+chr(032)
+Else
+	If Asc(Token) = 0 Then
+		Chr(032)
+	Else
+		token
+	End If
+end if]]></MapExpression>
+          <MapExpression language = "DJScript" recordlayoutname = "R1" fieldname = "CarrierZIP"><![CDATA[Token=Trim(Records("R1").Fields("CarrierZIP"))
+If Len(token)=0 Then
+chr(032)
+Else
+	If Asc(Token) = 0 Then
+		Chr(032)
+	Else
+		token
+	End If
+end if]]></MapExpression>
+          <MapExpression language = "DJScript" recordlayoutname = "R1" fieldname = "CoverageID"><![CDATA[Token=Trim(Records("R1").Fields("CoverageID"))
+If Len(token)=0 Then
+chr(032)
+Else
+	If Asc(Token) = 0 Then
+		Chr(032)
+	Else
+		token
+	End If
+end if]]></MapExpression>
+          <MapExpression language = "DJScript" recordlayoutname = "R1" fieldname = "CoverageDesc"><![CDATA[Token=Trim(Records("R1").Fields("CoverageDesc"))
+If Len(token)=0 Then
+chr(032)
+Else
+	If Asc(Token) = 0 Then
+		Chr(032)
+	Else
+		token
+	End If
+end if]]></MapExpression>
+          <MapExpression language = "DJScript" recordlayoutname = "R1" fieldname = "PolicyNbr"><![CDATA[Token=Trim(Records("R1").Fields("PolicyNbr"))
+If Len(token)=0 Then
+chr(032)
+Else
+	If Asc(Token) = 0 Then
+		Chr(032)
+	Else
+		token
+	End If
+end if]]></MapExpression>
+          <MapExpression language = "DJScript" recordlayoutname = "R1" fieldname = "PolicyEffDate"><![CDATA[Token=DateValMask(left(Records("R1").Fields("PolicyEffDate"), 11) ,"mon  d yyyy")
+Token2=DateValMask(left(Records("R1").Fields("PolicyEffDate"), 11) ,"mon dd yyyy")
+T1="1/1/1900"
+T2="12/31/2076"
+
+
+If IsDate (Token) And Year(Token)>1899 And Year(Token)<2076 Then
+	Token
+ElseIf IsDate (Token2) And Year(Token2)>1899 And Year(Token2)<2076 Then	
+	Token2
+ElseIf IsDate (Token) And Year(Token)>2076 THEN
+  DateValue(T2)
+ElseIf IsDate (Token2) And Year(Token2)>2076 THEN
+  DateValue(T2) 	
+ElseIf IsDate (Token) And Year(Token)<1900 THEN
+  DateValue(T1)
+ElseIf IsDate (Token2) And Year(Token2)<1900 THEN
+  DateValue(T1)
+else
+	NULL
+end if
+
+]]></MapExpression>
+          <MapExpression language = "DJScript" recordlayoutname = "R1" fieldname = "PolicyTermDate"><![CDATA[Token=DateValMask(left(Records("R1").Fields("PolicyTermDate"), 11) ,"mon  d yyyy")
+Token2=DateValMask(left(Records("R1").Fields("PolicyTermDate"), 11) ,"mon dd yyyy")
+T1="1/1/1900"
+T2="12/31/2076"
+
+
+If IsDate (Token) And Year(Token)>1899 And Year(Token)<2076 Then
+	Token
+ElseIf IsDate (Token2) And Year(Token2)>1899 And Year(Token2)<2076 Then	
+	Token2
+ElseIf IsDate (Token) And Year(Token)>2076 THEN
+  DateValue(T2)
+ElseIf IsDate (Token2) And Year(Token2)>2076 THEN
+  DateValue(T2) 	
+ElseIf IsDate (Token) And Year(Token)<1900 THEN
+  DateValue(T1)
+ElseIf IsDate (Token2) And Year(Token2)<1900 THEN
+  DateValue(T1)
+else
+	NULL
+end if
+]]></MapExpression>
+          <MapExpression language = "DJScript" recordlayoutname = "R1" fieldname = "PolicyUpdateDate"><![CDATA[Token=DateValMask(left(Records("R1").Fields("PolicyUpdateDate"), 11) ,"mon  d yyyy")
+Token2=DateValMask(left(Records("R1").Fields("PolicyUpdateDate"), 11) ,"mon dd yyyy")
+T1="1/1/1900"
+T2="12/31/2076"
+
+
+If IsDate (Token) And Year(Token)>1899 And Year(Token)<2076 Then
+	Token
+ElseIf IsDate (Token2) And Year(Token2)>1899 And Year(Token2)<2076 Then	
+	Token2
+ElseIf IsDate (Token) And Year(Token)>2076 THEN
+  DateValue(T2)
+ElseIf IsDate (Token2) And Year(Token2)>2076 THEN
+  DateValue(T2) 	
+ElseIf IsDate (Token) And Year(Token)<1900 THEN
+  DateValue(T1)
+ElseIf IsDate (Token2) And Year(Token2)<1900 THEN
+  DateValue(T1)
+else
+	NULL
+end if
+]]></MapExpression>
+          <MapExpression language = "DJScript" recordlayoutname = "R1" fieldname = "LoadDate"><![CDATA[now()]]></MapExpression>
+          <MapExpression language = "DJScript" recordlayoutname = "R1" fieldname = "SFileName"><![CDATA[SFileName]]></MapExpression>
+          <MapExpression language = "DJScript" recordlayoutname = "R1" fieldname = "StatsStratsPlaceholder"><![CDATA[0]]></MapExpression>
+          <MapExpression language = "DJScript" recordlayoutname = "R1" fieldname = "AutoID"><![CDATA[1]]></MapExpression>
+        </MapExpressions>
+      </MapSchema>
+    </MapTarget>
+  </MapTargets>
+</Map>
